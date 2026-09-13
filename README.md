@@ -1,37 +1,35 @@
 # amazon-seller-central-cli
 
-Amazon Seller Central research CLI
+A read-only CLI for Amazon Seller Central opportunity research through a configured API relay.
 
 ## Install
 
-## Use
-
-## License
-
-MIT.
-# amazon-seller-central-cli
-
-A JavaScript CLI for read-only Amazon Seller Central opportunity research through a configured authenticated relay.
-
-## Install
-
-Requires Bun. Clone this repository, run `bun install`, then run `bun run check`.
+Requires [Bun](https://bun.sh). Clone this repository, run `bun install`, then run `bun run check`.
 
 ## Use
 
-The executable is `./bin/amazon-seller-central-cli`. The default invocation is:
+The executable is `./bin/amazon-seller-central-cli`.
 
-```bash
-system-vault run sellerfield -- ./bin/amazon-seller-central-cli help
-```
+Commands:
 
-Commands: `status`, `search <seed>`, and `search <seed> --all-sources`; optional flags include `--json`, `--force-refresh`, `--timeframe`, and `--env`.
+- `status` checks relay availability.
+- `search <seed>` runs the default opportunity research.
+- `search <seed> --all-sources` includes every supported research source.
+
+All commands accept `--json`. Search also accepts `--force-refresh`, `--timeframe 1m|2m|3m`, and `--env production|beta`.
 
 ## Environment
 
-Credentials are read only from environment variables. Inject them with your organization's secret broker; never commit a `.env` file or put secret values in arguments.
+Credentials are read only from environment variables. Never commit a `.env` file or put secret values in arguments.
 
-`SELLERFIELD_API_KEY`; `SELLERFIELD_BETA_API_KEY` or `SELLERFIELD_PRODUCTION_API_KEY` may be used for explicit deployment selection.
+- `SELLERFIELD_API_KEY` for the production relay.
+- `SELLERFIELD_PRODUCTION_API_KEY` as an explicit production alternative.
+- `SELLERFIELD_BETA_API_KEY` for the beta relay.
+- `SELLERFIELD_ACCOUNT` to select the target account; it defaults to `default`.
+
+## Check
+
+`bun run check` performs a non-executing JavaScript syntax check. It does not need credentials or make network requests.
 
 ## License
 

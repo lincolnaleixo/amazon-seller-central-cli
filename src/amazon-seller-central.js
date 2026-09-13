@@ -32,14 +32,14 @@ function parseArgs(argv) {
   return { command: positional.shift() || "status", args: positional, flags };
 }
 
-function connection(flags) {
+function connection(flags, env = process.env) {
   const environment = flags.env || "production";
   if (!(environment in URLS)) fail("--env must be production or beta");
   const key = environment === "beta"
-    ? process.env.SELLERFIELD_BETA_API_KEY
-    : process.env.SELLERFIELD_API_KEY || process.env.SELLERFIELD_PRODUCTION_API_KEY;
-  if (!key) fail(`SellerField ${environment} API key is missing; run through system-vault run sellerfield`);
-  return { baseUrl: URLS[environment], key, environment };
+    ? env.SELLERFIELD_BETA_API_KEY
+    : env.SELLERFIELD_API_KEY || env.SELLERFIELD_PRODUCTION_API_KEY;
+  if (!key) fail(`SellerField ${environment} API key is missing; set the appropriate environment variable`);
+  return { baseUrl: URLS[environment], key, environment, account: env.SELLERFIELD_ACCOUNT || "default" };
 }
 
 async function request(conn, method, path, body, timeout = 60_000) {
@@ -114,41 +114,47 @@ function formatSearch(data, conn) {
   return lines.join("\n");
 }
 
-const { command, args, flags } = parseArgs(process.argv.slice(2));
-for (const name of Object.keys(flags)) {
-  if (!["json", "force-refresh", "all-sources", "timeframe", "env"].includes(name)) {
-    fail(`unknown flag: --${name}`);
+async function main(argv = process.argv.slice(2), env = process.env) {
+  const { command, args, flags } = parseArgs(argv);
+  for (const name of Object.keys(flags)) {
+    if (!["json", "force-refresh", "all-sources", "timeframe", "env"].includes(name)) {
+      fail(`unknown flag: --${name}`);
+    }
+  }
+  const conn = connection(flags, env);
+
+  const account = encodeURIComponent(conn.account);
+  if (command === "status") {
+    if (args.length) fail("status takes no arguments");
+    const data = await request(conn, "GET", `/keyword-research/status?account=${account}`);
+    console.log(flags.json ? JSON.stringify(data, null, 2) : formatStatus(data, conn));
+  } else if (command === "search") {
+    const seed = args.join(" ").trim();
+    if (seed.length < 2) fail("search requires a seed of at least two characters");
+    const timeframe = flags.timeframe || "1m";
+    if (!new Set(["1m", "2m", "3m"]).has(timeframe)) fail("--timeframe must be 1m, 2m, or 3m");
+    const sources = flags["all-sources"]
+      ? ["amazon-search", "poe-search", "brand-analytics", "amazon-data"]
+      : ["poe-search"];
+    const data = await request(
+      conn,
+      "POST",
+      `/keyword-research/run?account=${account}`,
+      {
+        seed,
+        sources,
+        marketplace: "US",
+        timeframe,
+        forceRefresh: Boolean(flags["force-refresh"]),
+      },
+      150_000,
+    );
+    console.log(flags.json ? JSON.stringify(data, null, 2) : formatSearch(data, conn));
+  } else {
+    fail("unknown command; expected status or search");
   }
 }
-const conn = connection(flags);
 
-if (command === "status") {
-  if (args.length) fail("status takes no arguments");
-  const data = await request(conn, "GET", "/keyword-research/status?account=lln");
-  console.log(flags.json ? JSON.stringify(data, null, 2) : formatStatus(data, conn));
-} else if (command === "search") {
-  const seed = args.join(" ").trim();
-  if (seed.length < 2) fail("search requires a seed of at least two characters");
-  const timeframe = flags.timeframe || "1m";
-  if (!new Set(["1m", "2m", "3m"]).has(timeframe)) fail("--timeframe must be 1m, 2m, or 3m");
-  const sources = flags["all-sources"]
-    ? ["amazon-search", "poe-search", "brand-analytics", "amazon-data"]
-    : ["poe-search"];
-  const data = await request(
-    conn,
-    "POST",
-    "/keyword-research/run?account=lln",
-    {
-      seed,
-      sources,
-      marketplace: "US",
-      timeframe,
-      forceRefresh: Boolean(flags["force-refresh"]),
-    },
-    150_000,
-  );
-  console.log(flags.json ? JSON.stringify(data, null, 2) : formatSearch(data, conn));
-} else {
-  fail("unknown command; expected status or search");
-}
+if (import.meta.main) await main();
 
+export { main, parseArgs, formatSearch, formatStatus };
