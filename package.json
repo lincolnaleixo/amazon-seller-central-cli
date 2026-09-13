@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "bun@1.4.0",
   "bin": { "amazon-seller-central-cli": "./bin/amazon-seller-central-cli" },
-  "files": ["bin", "src", "LICENSE", "README.md", "tsconfig.json"],
+  "files": ["bin", "src", "LICENSE", "README.md"],
   "scripts": {
     "check": "bun run typecheck && bun run test",
     "typecheck": "node --check src/amazon-seller-central.js",
