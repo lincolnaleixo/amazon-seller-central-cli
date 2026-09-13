@@ -8,7 +8,11 @@
   "files": ["bin", "src", "LICENSE", "README.md", "tsconfig.json"],
   "scripts": {
     "check": "bun run typecheck && bun run test",
-    "typecheck": "bun --check src/amazon-seller-central.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "typescript": "7.0.2"
   }
 }

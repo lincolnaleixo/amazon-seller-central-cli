@@ -132,8 +132,8 @@ Commands:
   help                   Show this help
 
 Options:
-  --account <value>      Select the remote account (or SELLERFIELD_ACCOUNT)
-  --marketplace <value>  Select the marketplace (or SELLERFIELD_MARKETPLACE)
+  --account <value>      Select the remote account (or SELLER_CENTRAL_ACCOUNT)
+  --marketplace <value>  Select the marketplace (or SELLER_CENTRAL_MARKETPLACE)
   --env <production|beta> Select the API deployment
   --timeframe <1m|2m|3m> Search timeframe (default: 1m)
   --all-sources          Query every available research source

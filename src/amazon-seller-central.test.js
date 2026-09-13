@@ -11,7 +11,11 @@ test("parses account and marketplace options without executing the CLI", () => {
 test("builds configurable connection settings from generic environment values", () => {
   const conn = connection(
     { env: "beta", account: "flag-account", marketplace: "GB" },
-    { SELLERFIELD_BETA_API_KEY: "test-key", SELLERFIELD_ACCOUNT: "env-account" },
+    {
+      SELLER_CENTRAL_BETA_API_KEY: "test-key",
+      SELLER_CENTRAL_BETA_API_URL: "https://relay.example.test/api",
+      SELLER_CENTRAL_ACCOUNT: "env-account",
+    },
   );
   expect(conn.environment).toBe("beta");
   expect(conn.account).toBe("flag-account");
