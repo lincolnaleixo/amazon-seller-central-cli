@@ -6,17 +6,23 @@ A read-only CLI for Amazon Seller Central opportunity research through a configu
 
 Requires [Bun](https://bun.sh). Clone this repository, run `bun install`, then run `bun run check`.
 
-## Use
+## Commands
 
 The executable is `./bin/amazon-seller-central-cli`.
 
-Commands:
+```text
+amazon-seller-central-cli status [options]
+amazon-seller-central-cli search <seed> [options]
+amazon-seller-central-cli help
+```
 
-- `status` checks relay availability.
-- `search <seed>` runs the default opportunity research.
-- `search <seed> --all-sources` includes every supported research source.
+`status` checks relay connectivity and available sources. `search` runs
+keyword research for the supplied seed. Search uses the POE source by default;
+`--all-sources` enables all supported sources. Results can be printed as JSON
+with `--json`. `--force-refresh` bypasses cached results.
 
-All commands accept `--json`. Search also accepts `--force-refresh`, `--timeframe 1m|2m|3m`, and `--env production|beta`.
+Options include `--account <value>`, `--marketplace <value>`,
+`--env <production|beta>`, and `--timeframe <1m|2m|3m>`.
 
 ## Environment
 
@@ -26,6 +32,8 @@ Credentials are read only from environment variables. Never commit a `.env` file
 - `SELLERFIELD_PRODUCTION_API_KEY` as an explicit production alternative.
 - `SELLERFIELD_BETA_API_KEY` for the beta relay.
 - `SELLERFIELD_ACCOUNT` to select the target account; it defaults to `default`.
+- `SELLERFIELD_MARKETPLACE` to select the default marketplace; it defaults to
+  `US`.
 
 ## Check
 

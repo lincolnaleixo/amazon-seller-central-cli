@@ -39,7 +39,9 @@ function connection(flags, env = process.env) {
     ? env.SELLERFIELD_BETA_API_KEY
     : env.SELLERFIELD_API_KEY || env.SELLERFIELD_PRODUCTION_API_KEY;
   if (!key) fail(`SellerField ${environment} API key is missing; set the appropriate environment variable`);
-  return { baseUrl: URLS[environment], key, environment, account: env.SELLERFIELD_ACCOUNT || "default" };
+  const account = flags.account || env.SELLERFIELD_ACCOUNT || "default";
+  const marketplace = flags.marketplace || env.SELLERFIELD_MARKETPLACE || "US";
+  return { baseUrl: URLS[environment], key, environment, account, marketplace };
 }
 
 async function request(conn, method, path, body, timeout = 60_000) {
@@ -87,7 +89,7 @@ function formatSearch(data, conn) {
   const lines = [
     `Seed: ${data.seed || "—"}`,
     `SellerField: ${conn.environment}`,
-    `Marketplace: ${data.marketplace || "US"}`,
+    `Marketplace: ${data.marketplace || conn.marketplace}`,
     `Keywords: ${data.keywordCount ?? keywords.length}`,
     `Duration: ${stats.durationMs ? `${(stats.durationMs / 1000).toFixed(1)}s` : "—"}`,
     `Cached: ${data.cached ? `yes (${data.cachedAt || "time unavailable"})` : "no"}`,
@@ -117,9 +119,28 @@ function formatSearch(data, conn) {
 async function main(argv = process.argv.slice(2), env = process.env) {
   const { command, args, flags } = parseArgs(argv);
   for (const name of Object.keys(flags)) {
-    if (!["json", "force-refresh", "all-sources", "timeframe", "env"].includes(name)) {
+    if (!["json", "force-refresh", "all-sources", "timeframe", "env", "account", "marketplace"].includes(name)) {
       fail(`unknown flag: --${name}`);
     }
+  }
+  if (command === "help") {
+    if (args.length) fail("help takes no arguments");
+    console.log(`Usage: amazon-seller-central-cli <command> [options]
+
+Commands:
+  status                 Check relay and source availability
+  search <seed>          Research keyword opportunities
+  help                   Show this help
+
+Options:
+  --account <value>      Select the remote account (or SELLERFIELD_ACCOUNT)
+  --marketplace <value>  Select the marketplace (or SELLERFIELD_MARKETPLACE)
+  --env <production|beta> Select the API deployment
+  --timeframe <1m|2m|3m> Search timeframe (default: 1m)
+  --all-sources          Query every available research source
+  --force-refresh        Ignore a cached result
+  --json                 Print JSON output`);
+    return;
   }
   const conn = connection(flags, env);
 
@@ -143,7 +164,7 @@ async function main(argv = process.argv.slice(2), env = process.env) {
       {
         seed,
         sources,
-        marketplace: "US",
+        marketplace: conn.marketplace,
         timeframe,
         forceRefresh: Boolean(flags["force-refresh"]),
       },
@@ -151,10 +172,10 @@ async function main(argv = process.argv.slice(2), env = process.env) {
     );
     console.log(flags.json ? JSON.stringify(data, null, 2) : formatSearch(data, conn));
   } else {
-    fail("unknown command; expected status or search");
+    fail("unknown command; expected status, search, or help");
   }
 }
 
 if (import.meta.main) await main();
 
-export { main, parseArgs, formatSearch, formatStatus };
+export { connection, main, parseArgs, formatSearch, formatStatus, request };
