@@ -1,10 +1,5 @@
 #!/usr/bin/env bun
 
-const URLS = {
-  production: "https://sellerfield.com/api",
-  beta: "https://beta.sellerfield.com/api",
-};
-
 function fail(message, details) {
   if (details !== undefined) console.error(JSON.stringify(details, null, 2));
   console.error(message);
@@ -34,14 +29,18 @@ function parseArgs(argv) {
 
 function connection(flags, env = process.env) {
   const environment = flags.env || "production";
-  if (!(environment in URLS)) fail("--env must be production or beta");
+  if (!["production", "beta"].includes(environment)) fail("--env must be production or beta");
   const key = environment === "beta"
-    ? env.SELLERFIELD_BETA_API_KEY
-    : env.SELLERFIELD_API_KEY || env.SELLERFIELD_PRODUCTION_API_KEY;
-  if (!key) fail(`SellerField ${environment} API key is missing; set the appropriate environment variable`);
-  const account = flags.account || env.SELLERFIELD_ACCOUNT || "default";
-  const marketplace = flags.marketplace || env.SELLERFIELD_MARKETPLACE || "US";
-  return { baseUrl: URLS[environment], key, environment, account, marketplace };
+    ? env.SELLER_CENTRAL_BETA_API_KEY || env.SELLER_CENTRAL_API_KEY
+    : env.SELLER_CENTRAL_API_KEY;
+  const baseUrl = environment === "beta"
+    ? env.SELLER_CENTRAL_BETA_API_URL || env.SELLER_CENTRAL_API_URL
+    : env.SELLER_CENTRAL_API_URL;
+  if (!key) fail(`Seller Central ${environment} API key is missing; set the appropriate environment variable`);
+  if (!baseUrl) fail(`Seller Central ${environment} API URL is missing; set the appropriate environment variable`);
+  const account = flags.account || env.SELLER_CENTRAL_ACCOUNT || "default";
+  const marketplace = flags.marketplace || env.SELLER_CENTRAL_MARKETPLACE || "US";
+  return { baseUrl: baseUrl.replace(/\/$/, ""), key, environment, account, marketplace };
 }
 
 async function request(conn, method, path, body, timeout = 60_000) {
@@ -58,13 +57,13 @@ async function request(conn, method, path, body, timeout = 60_000) {
       signal: AbortSignal.timeout(timeout),
     });
   } catch (error) {
-    fail(`SellerField is unreachable at ${conn.baseUrl}`, error instanceof Error ? error.message : String(error));
+    fail(`Seller Central relay is unreachable at ${conn.baseUrl}`, error instanceof Error ? error.message : String(error));
   }
   const text = await response.text();
   let payload = {};
   try { payload = text ? JSON.parse(text) : {}; }
   catch { payload = { error: text.slice(0, 500) }; }
-  if (!response.ok) fail(`SellerField HTTP ${response.status}`, payload);
+  if (!response.ok) fail(`Seller Central relay HTTP ${response.status}`, payload);
   return payload?.data ?? payload;
 }
 
@@ -75,7 +74,7 @@ function sourceMetadata(keyword, sourceName) {
 function formatStatus(data, conn) {
   const sources = Array.isArray(data.availableSources) ? data.availableSources.join(", ") : "none";
   return [
-    `SellerField: ${conn.environment}`,
+    `Seller Central relay: ${conn.environment}`,
     `Browser relay: ${data.connected ? "connected" : "not connected"}`,
     `Message: ${data.message || "—"}`,
     `Sources: ${sources}`,
@@ -88,7 +87,7 @@ function formatSearch(data, conn) {
   const keywords = Array.isArray(data.keywords) ? data.keywords : [];
   const lines = [
     `Seed: ${data.seed || "—"}`,
-    `SellerField: ${conn.environment}`,
+    `Seller Central relay: ${conn.environment}`,
     `Marketplace: ${data.marketplace || conn.marketplace}`,
     `Keywords: ${data.keywordCount ?? keywords.length}`,
     `Duration: ${stats.durationMs ? `${(stats.durationMs / 1000).toFixed(1)}s` : "—"}`,

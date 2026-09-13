@@ -8,5 +8,5 @@
     "moduleResolution": "Bundler",
     "strict": true
   },
-  "include": ["src/**/*.js"]
+  "include": ["src/amazon-seller-central.js"]
 }

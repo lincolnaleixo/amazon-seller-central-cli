@@ -7,7 +7,8 @@
   "bin": { "amazon-seller-central-cli": "./bin/amazon-seller-central-cli" },
   "files": ["bin", "src", "LICENSE", "README.md", "tsconfig.json"],
   "scripts": {
-    "check": "bun run typecheck",
-    "typecheck": "bun --check src/amazon-seller-central.js"
+    "check": "bun run typecheck && bun run test",
+    "typecheck": "bun --check src/amazon-seller-central.js",
+    "test": "bun test"
   }
 }

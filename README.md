@@ -28,11 +28,10 @@ Options include `--account <value>`, `--marketplace <value>`,
 
 Credentials are read only from environment variables. Never commit a `.env` file or put secret values in arguments.
 
-- `SELLERFIELD_API_KEY` for the production relay.
-- `SELLERFIELD_PRODUCTION_API_KEY` as an explicit production alternative.
-- `SELLERFIELD_BETA_API_KEY` for the beta relay.
-- `SELLERFIELD_ACCOUNT` to select the target account; it defaults to `default`.
-- `SELLERFIELD_MARKETPLACE` to select the default marketplace; it defaults to
+- `SELLER_CENTRAL_API_URL` and `SELLER_CENTRAL_API_KEY` for the production relay.
+- `SELLER_CENTRAL_BETA_API_URL` and `SELLER_CENTRAL_BETA_API_KEY` for the beta relay; production values are fallbacks when beta-specific values are absent.
+- `SELLER_CENTRAL_ACCOUNT` to select the target account; it defaults to `default`.
+- `SELLER_CENTRAL_MARKETPLACE` to select the default marketplace; it defaults to
   `US`.
 
 ## Check
