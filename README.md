@@ -36,7 +36,8 @@ Credentials are read only from environment variables. Never commit a `.env` file
 
 ## Check
 
-`bun run check` performs a non-executing JavaScript syntax check. It does not need credentials or make network requests.
+`bun run check` performs a non-executing JavaScript syntax check and runs the
+credential-free unit tests. It does not make network requests.
 
 ## License
 
